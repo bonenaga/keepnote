@@ -32,7 +32,7 @@ import os
 import sys
 import time
 import shutil
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import xml.dom
 from xml.dom import minidom
 from xml.sax.saxutils import escape
@@ -157,13 +157,13 @@ class Extension (extension.Extension):
                 window.set_status("Notebook exported")
                 return True
 
-            except NoteBookError, e:
+            except NoteBookError as e:
                 window.set_status("")
                 window.error("Error while exporting notebook:\n%s" % e.msg, e,
                              tracebk)
                 return False
 
-            except Exception, e:
+            except Exception as e:
                 window.set_status("")
                 window.error("unknown error", e, tracebk)
                 return False
@@ -192,10 +192,10 @@ def relpath(path, start):
             rel.append(tail)
         else:
             head2, tail2 = os.path.split(head2)
-            rel2.append(u"..")
+            rel2.append("..")
 
     rel2.extend(reversed(rel))
-    return u"/".join(rel2)
+    return "/".join(rel2)
         
 
 def nodeid2html_link(notebook, path, nodeid):
@@ -203,12 +203,12 @@ def nodeid2html_link(notebook, path, nodeid):
     if note:
         newpath = relpath(note.get_path(), path)
         if note.get_attr("content_type") == "text/xhtml+xml":
-            newpath = u"/".join((newpath, u"page.html"))
+            newpath = "/".join((newpath, "page.html"))
 
         elif note.has_attr("payload_filename"):
-            newpath = u"/".join((newpath, note.get_attr("payload_filename")))
+            newpath = "/".join((newpath, note.get_attr("payload_filename")))
 
-        return urllib.quote(newpath.encode("utf8"))
+        return urllib.parse.quote(newpath.encode("utf8"))
     else:
         return ""
 
@@ -241,7 +241,7 @@ def write_index(notebook, node, path):
 
     out = codecs.open(index_file, "wb", "utf-8")
     #out = open(index_file, "wb")
-    out.write((u"""<html>
+    out.write(("""<html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>%s</title>
@@ -257,7 +257,7 @@ def write_index(notebook, node, path):
 
     # write tree file    
     out = codecs.open(tree_file, "wb", "utf-8")
-    out.write(u"""<html>
+    out.write("""<html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 </head>
@@ -363,30 +363,30 @@ font-weight: bold;
         expand = node.get_attr("expanded", False)
 
         if len(node.get_children()) > 0:
-            out.write(u"""<nobr><tt><a href='javascript: toggleDivName("%s", %s)'>+</a>&nbsp;</tt>""" %
-                      (nodeid, [u"false", u"true"][int(expand)]))
+            out.write("""<nobr><tt><a href='javascript: toggleDivName("%s", %s)'>+</a>&nbsp;</tt>""" %
+                      (nodeid, ["false", "true"][int(expand)]))
         else:
-            out.write(u"<nobr><tt>&nbsp;&nbsp;</tt>")
+            out.write("<nobr><tt>&nbsp;&nbsp;</tt>")
 
 
         if node.get_attr("content_type") == notebooklib.CONTENT_TYPE_DIR:
-            out.write(u"%s</nobr><br/>\n" % escape(node.get_title()))
+            out.write("%s</nobr><br/>\n" % escape(node.get_title()))
         else:
-            out.write(u"<a href='%s' target='viewer'>%s</a></nobr><br/>\n" 
+            out.write("<a href='%s' target='viewer'>%s</a></nobr><br/>\n" 
                       % (nodeid2html_link(notebook, rootpath, nodeid),
                          escape(node.get_title())))
 
         if len(node.get_children()) > 0:
-            out.write(u"<div id='%s' class='node%s'>" % 
-                      (nodeid, [u"_collapsed", ""][int(expand)]))
+            out.write("<div id='%s' class='node%s'>" % 
+                      (nodeid, ["_collapsed", ""][int(expand)]))
 
             for child in node.get_children():
                 walk(child)
 
-            out.write(u"</div>\n")
+            out.write("</div>\n")
     walk(node)
 
-    out.write(u"""</body></html>""")
+    out.write("""</body></html>""")
     out.close()
 
 
@@ -407,7 +407,7 @@ def export_notebook(notebook, filename, task):
     # make sure all modifications are saved first
     try:
         notebook.save()
-    except Exception, e:
+    except Exception as e:
         raise NoteBookError("Could not save notebook before archiving", e)
 
 
@@ -431,7 +431,7 @@ def export_notebook(notebook, filename, task):
         try:
             dom = minidom.parse(filename)
                         
-        except Exception, e:
+        except Exception as e:
             # error parsing file, use simple file export
             export_files(filename, filename2)
             

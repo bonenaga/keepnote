@@ -116,7 +116,7 @@ class Extension (extension.Extension):
                 time.strftime("-%Y-%m-%d"), ".tar.gz", ".")
         else: 
             filename = os.path.basename(notebook.get_path()) + \
-                time.strftime("-%Y-%m-%d") + u".tar.gz"
+                time.strftime("-%Y-%m-%d") + ".tar.gz"
         
         dialog.set_current_name(os.path.basename(filename))
 
@@ -137,8 +137,8 @@ class Extension (extension.Extension):
             filename = unicode_gtk(dialog.get_filename())
             dialog.destroy()
 
-            if u"." not in filename:
-                filename += u".tar.gz"
+            if "." not in filename:
+                filename += ".tar.gz"
 
             window.set_status("Archiving...")
             return self.archive_notebook(notebook, filename, window)
@@ -248,13 +248,13 @@ class Extension (extension.Extension):
                 window.set_status("Notebook archived")
                 return True
 
-            except NoteBookError, e:
+            except NoteBookError as e:
                 window.set_status("")
                 window.error("Error while archiving notebook:\n%s" % e.msg, e,
                              tracebk)
                 return False
 
-            except Exception, e:
+            except Exception as e:
                 window.set_status("")
                 window.error("unknown error", e, tracebk)
                 return False
@@ -288,12 +288,12 @@ class Extension (extension.Extension):
                     raise error
                 window.set_status("Notebook restored")
 
-            except NoteBookError, e:
+            except NoteBookError as e:
                 window.set_status("")
                 window.error("Error restoring notebook:\n%s" % e.msg, e, tracebk)
                 return
 
-            except Exception, e:
+            except Exception as e:
                 window.set_status("")
                 window.error("unknown error", e, tracebk)
                 return
@@ -328,7 +328,7 @@ def archive_notebook(notebook, filename, task=None):
     # make sure all modifications are saved first
     try:
         notebook.save()
-    except Exception, e:
+    except Exception as e:
         raise NoteBookError("Could not save notebook before archiving", e)
 
 
@@ -447,10 +447,10 @@ def restore_notebook(filename, path, rename, task=None):
                 os.rmdir(tmppath)
 
 
-        except NoteBookError, e:
+        except NoteBookError as e:
             raise e
         
-        except Exception, e:
+        except Exception as e:
             raise NoteBookError("File writing error while extracting notebook", e)
 
     else:
@@ -458,7 +458,7 @@ def restore_notebook(filename, path, rename, task=None):
             if task:
                 task.set_message(("text", "Restoring archive..."))
             tar.extractall(path)
-        except Exception, e:
+        except Exception as e:
             raise NoteBookError("File writing error while extracting notebook", e)
 
     task.finish()
@@ -481,7 +481,7 @@ def archive_notebook_zip(notebook, filename, task=None):
     # make sure all modifications are saved first
     try:
         notebook.save()
-    except Exception, e:
+    except Exception as e:
         raise NoteBookError("Could not save notebook before archiving", e)
 
     # perform archiving
@@ -534,5 +534,5 @@ def archive_notebook_zip(notebook, filename, task=None):
             task.finish()
             
         
-    except Exception, e:
+    except Exception as e:
         raise NoteBookError("Error while archiving notebook", e)

@@ -33,7 +33,7 @@ import time
 import xml.etree.cElementTree as etree
 
 
-_ = gettext.gettext
+#_ = gettext.gettext
 
 import keepnote
 from keepnote import unicode_gtk
@@ -252,7 +252,7 @@ class Extension (extension.Extension):
             node = notebooklib.attach_file(uri, parent)
             node.rename(file_type.filename)
             window.get_viewer().goto_node(node)
-        except Exception, e:
+        except Exception as e:
             window.error("Error while attaching file '%s'." % uri, e)
 
 
@@ -298,7 +298,7 @@ class Extension (extension.Extension):
 
         # populate menu
         for file_type in self._file_types:
-            item = gtk.MenuItem(u"New %s" % file_type.name)
+            item = gtk.MenuItem("New %s" % file_type.name)
             item.connect("activate", make_func(file_type))
             item.show()
             menu.append(item)
@@ -307,7 +307,7 @@ class Extension (extension.Extension):
         item.show()
         menu.append(item)
 
-        item = gtk.MenuItem(u"Add New File Type")
+        item = gtk.MenuItem("Add New File Type")
         item.connect("activate", lambda w: self.on_new_file_type(window))
         item.show()
         menu.append(item)
@@ -324,7 +324,7 @@ class Extension (extension.Extension):
         newfilename = os.path.basename(filename)
         newfilename, ext = os.path.splitext(newfilename)
         newfilename = notebooklib.get_unique_filename(newpath, newfilename, 
-                                                      ext=ext, sep=u"", 
+                                                      ext=ext, sep="", 
                                                       number=2)
         shutil.copy(filename, newfilename)
         return os.path.basename(newfilename)
@@ -348,7 +348,7 @@ class NewFileSection (dialog_app_options.Section):
     """A Section in the Options Dialog"""
 
     def __init__(self, key, dialog, app, ext,
-                 label=u"New File Types", 
+                 label="New File Types", 
                  icon=None):
         dialog_app_options.Section.__init__(self, key, dialog, app, label, icon)
 
@@ -494,7 +494,7 @@ class NewFileSection (dialog_app_options.Section):
                 try:
                     filetype.example_file = self.ext.install_example_file(
                         filetype.example_file)
-                except Exception, e:
+                except Exception as e:
                     app.error("Cannot install example file '%s'" % 
                               filetype.example_file, e)
                     bad.append(filetype)
@@ -562,7 +562,7 @@ class NewFileSection (dialog_app_options.Section):
     def on_new_filetype(self, button):
         """Callback for adding a new filetype"""
 
-        self._filetypes.append(FileType(u"New File Type", u"untitled", ""))
+        self._filetypes.append(FileType("New File Type", "untitled", ""))
         self.set_filetypes()
         self.filetype_listview.set_cursor((len(self._filetypes)-1,))
 

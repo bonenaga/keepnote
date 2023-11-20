@@ -175,7 +175,7 @@ class EditorInsertDateSection (dialog_app_options.Section):
     """A Section in the Options Dialog"""
 
     def __init__(self, key, dialog, app, ext,
-                 label=u"Editor Insert Date", 
+                 label="Editor Insert Date", 
                  icon=None):
         dialog_app_options.Section.__init__(self, key, dialog, app, label, icon)
 
