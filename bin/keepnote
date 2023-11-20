@@ -19,15 +19,15 @@
 #
 
 # python imports
-import exceptions
 import sys
 import os
 from os.path import basename, dirname, realpath, join, isdir
 import time
 import optparse
-import thread
+import _thread as thread
 import threading
 import traceback
+
 
 
 
@@ -85,12 +85,12 @@ if os.path.exists(join(pkgdir, "keepnote", "__init__.py")):
 else:
     # try to import from python path
     import keepnote
-    
-    # sucessful import, therefore we are running with (2) or (3)
-    
+
+    # successful import, therefore we are running with (2) or (3)
+
     # attempt to use basedir for (2)
     basedir = keepnote.get_basedir()
-    
+
     if not isdir(join(basedir, "images")):
         # we must be running (3)
         basedir = dirname(realpath(sys.argv[0]))
@@ -111,42 +111,23 @@ _ = keepnote.translate
 
 
 #=============================================================================
-# command-line options
+import argparse
 
-o = optparse.OptionParser(usage=
-                "%prog [options] [NOTEBOOK]")
-o.set_defaults(default_notebook=True)
-o.add_option("-c", "--cmd", dest="cmd",
-             action="store_true",
-             help="treat remaining arguments as a command")
-o.add_option("-l", "--list-cmd", dest="list_cmd",
-             action="store_true",
-             help="list available commands")
-o.add_option("-i", "--info", dest="info",
-             action="store_true",
-             help="show runtime information")
-o.add_option("--no-gui", dest="no_gui",
-             action="store_true",
-             help="run in non-gui mode")
-o.add_option("-t", "--continue", dest="cont",
-             action="store_true",
-             help="continue to run after command execution")
-o.add_option("", "--show-errors", dest="show_errors",
-             action="store_true",
-             help="show errors on console")
-o.add_option("--no-show-errors", dest="show_errors",
-             action="store_false",
-             help="do not show errors on console")
-o.add_option("--no-default", dest="default_notebook",
-             action="store_false",
-             help="do not open default notebook")
-o.add_option("", "--newproc", dest="newproc",
-             action="store_true",
-             help="start KeepNote in a new process")
-o.add_option("-p", "--port", dest="port",
-             default=None,
-             type="int",
-             help="use a specified port for listening to commands")
+parser = argparse.ArgumentParser(prog='keepnote', usage='%(prog)s [options] [NOTEBOOK]')
+parser.set_defaults(default_notebook=True)
+parser.add_argument("-c", "--cmd", dest="cmd", action="store_true", help="treat remaining arguments as a command")
+parser.add_argument("-l", "--list-cmd", dest="list_cmd", action="store_true", help="list available commands")
+parser.add_argument("-i", "--info", dest="info", action="store_true", help="show runtime information")
+parser.add_argument("--no-gui", dest="no_gui", action="store_true", help="run in non-gui mode")
+parser.add_argument("-t", "--continue", dest="cont", action="store_true", help="continue to run after command execution")
+parser.add_argument("", "--show-errors", dest="show_errors", action="store_true", help="show errors on console")
+parser.add_argument("--no-show-errors", dest="show_errors", action="store_false", help="do not show errors on console")
+parser.add_argument("--no-default", dest="default_notebook", action="store_false", help="do not open default notebook")
+parser.add_argument("", "--newproc", dest="newproc", action="store_true", help="start KeepNote in a new process")
+parser.add_argument("-p", "--port", dest="port", default=None, type=int, help="use a specified port for listening to commands")
+
+args = parser.parse_args()
+
 
 
 #=============================================================================
@@ -155,32 +136,32 @@ def start_error_log(show_errors):
     """Starts KeepNote error log"""
 
     keepnote.init_error_log()
-        
-    # Test ability to write to file-like objects used to display errors.  
+
+    # Test ability to write to file-like objects used to display errors.
     # - if stderr is unavailable, create error message, else add to stream
     #   list. Do not exit.
     # Note: this code-section is necessary to allow Linux-users the option of
-    #       launching KeepNote from a *.desktop file without having it  
-    #       run in a terminal. In other words, 'Terminal=false' can be safely 
-    #       added to the *.desktop file; without this code, adding 
-    #       'Terminal=false' to the *.desktop file causes KeepNote 
+    #       launching KeepNote from a *.desktop file without having it
+    #       run in a terminal. In other words, 'Terminal=false' can be safely
+    #       added to the *.desktop file; without this code, adding
+    #       'Terminal=false' to the *.desktop file causes KeepNote
     #       launch failure.
-    
+
     stream_list = []
     stderr_test_str = "\n"
     stderr_except_msg = ""
-    
-    if show_errors:    
-        try:            
+
+    if show_errors:
+        try:
             sys.stderr.write(stderr_test_str)
-        except IOError:
+        except OSError:
             formatted_msg = traceback.format_exc().splitlines()
             stderr_except_msg = ''.join(
                 ['** stderr - unavailable for messages - ',
                  formatted_msg[-1], "\n"])
         else:
             stream_list.append(sys.stderr)
-    
+
     # if errorlog is unavailable, exit with error, else add to stream list.
     try:
         errorlog = open(keepnote.get_user_error_log(), "a")
@@ -188,11 +169,9 @@ def start_error_log(show_errors):
         sys.exit(traceback.print_exc())
     else:
         stream_list.append(errorlog)
-    
 
     # redirect stderr
     sys.stderr = TeeFileStream(stream_list, autoflush=True)
-
 
     # write errorlog header
     keepnote.print_error_log_header()
@@ -202,56 +181,65 @@ def start_error_log(show_errors):
 def parse_argv(argv):
     """Parse arguments"""
 
-    # set default arguments
+    # Set default arguments
     options = o.get_default_values()
-    if keepnote.get_platform() == "windows":        
+
+    # Adjust show_errors option based on the platform
+    if keepnote.get_platform() == "windows":
         options.show_errors = False
     else:
         options.show_errors = True
 
-    # parse args and process
-    (options, args) = o.parse_args(argv[1:], options)
+    # Parse args and process
+    (options, args) = o.parse_args(argv[1:], values=options)
     return options, args
+
 
 
 def setup_threading():
     """Initialize threading environment"""
 
-    import gtk.gdk
-    import gobject
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gdk, GLib
 
     if keepnote.get_platform() == "windows":
-        # HACK: keep gui thread active
+        # HACK: keep GUI thread active
         def sleeper():
             time.sleep(.001)
-            return True # repeat timer
-        gobject.timeout_add(400, sleeper)
+            return True  # repeat timer
+
+        GLib.timeout_add(400, sleeper)
 
     else:
-        gtk.gdk.threads_init()
+        Gdk.threads_init()
+
 
 
 def gui_exec(function, *args, **kw):
     """Execute a function in the GUI thread"""
-    
-    import gtk.gdk
-    import gobject
+
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import GLib, Gdk
 
     sem = threading.Semaphore()
     sem.acquire()
 
     def idle_func():
-        gtk.gdk.threads_enter()
+        Gdk.threads_enter()
         try:
             function(*args, **kw)
             return False
         finally:
-            sem.release() # notify that command is done
-            gtk.gdk.threads_leave()
-    gobject.idle_add(idle_func)
+            sem.release()  # notify that command is done
+            Gdk.threads_leave()
+
+    GLib.idle_add(idle_func)
 
     # wait for command to execute
     sem.acquire()
+
     
 
 
@@ -259,9 +247,9 @@ def start_gui(argv, options, args, cmd_exec):
     import keepnote.gui
 
     # pygtk imports
-    import pygtk
-    pygtk.require('2.0')
-    import gtk
+    import gi
+    gi.require_version('Gtk', '3.0')
+    from gi.repository import Gtk
 
     # setup threading environment
     setup_threading()
@@ -271,10 +259,11 @@ def start_gui(argv, options, args, cmd_exec):
     app.init()
     cmd_exec.set_app(app)
     need_gui = execute_command(app, argv)
-    
+
     # begin gtk event loop
     if need_gui:
-        gtk.main()
+        Gtk.main()
+
 
 
 def start_non_gui(argv, options, args, cmd_exec):
@@ -290,7 +279,7 @@ def execute_command(app, argv):
     """
     Execute commands given on command line
 
-    Returns True if gui event loop should be started
+    Returns True if GUI event loop should be started
     """
     
     options, args = parse_argv(argv)
@@ -338,7 +327,7 @@ def execute_command(app, argv):
         for arg in args:
 
             if keepnote.notebook.is_node_url(arg):
-                # goto a node
+                # go to a node
                 host, nodeid = keepnote.notebook.parse_node_url(arg)
                 app.goto_nodeid(nodeid)
 
@@ -370,29 +359,30 @@ def execute_command(app, argv):
     return True
 
 
+
 def list_commands(app):
     """List available commands"""
     
     commands = app.get_commands()
     commands.sort(key=lambda x: x.name)
 
-    print
-    print "available commands:"
+    print()
+    print("available commands:")
     for command in commands:
-        print " " + command.name,
+        print(" " + command.name, end="")
         if command.metavar:
-            print " " + command.metavar,            
+            print(" " + command.metavar, end="")
         if command.help:
-            print " -- " + command.help,
-        print
+            print(" -- " + command.help, end="")
+        print()
 
 
 
 def main(argv):
-    """Main execution"""    
+    """Main execution"""
 
     options, args = parse_argv(argv)
-    
+
     # init preference dir
     keepnote.compat.pref.check_old_user_pref_dir()
     if not os.path.exists(keepnote.get_user_pref_dir()):
@@ -413,7 +403,7 @@ def main(argv):
             main_proc, cmd_exec = get_command_executor(
                 lambda app, argv: gui_exec(
                     lambda: execute_command(app, argv)),
-                port=options.port)    
+                port=options.port)
 
     if main_proc:
         # initiate main process
@@ -430,16 +420,13 @@ def main(argv):
         while True:
             time.sleep(1000)
 
-#=============================================================================
 # start main function
 # catch any exceptions that occur
 try:
     main(sys.argv)
-except exceptions.SystemExit, e:
-    # sys.exit() was called
-    pass
-except Exception, e:
+except Exception:
     traceback.print_exc()
     sys.stderr.flush()
+
 
 
