@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#
+# 
 # setup for KeepNote
 #
 # use the following command to install KeepNote:
@@ -26,6 +26,9 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 
+
+
+
 #=============================================================================
 # constants
 
@@ -35,15 +38,14 @@ KEEPNOTE_VERSION = keepnote.PROGRAM_VERSION_TEXT
 
 #=============================================================================
 # python and distutils imports
-from distutils.core import setup
-import itertools
 import os
 import sys
+import shutil
+from setuptools import setup
 
-# py2exe module (if building on windows)
+# cx_Freeze module (if building on windows)
 try:
-    import py2exe
-    py2exe  # ignore pyflake warning.
+    import cx_Freeze
 except ImportError:
     pass
 
@@ -60,48 +62,56 @@ def split_path(path):
         pathlist.append(tail)
     pathlist.reverse()
     return pathlist
+    
 
 
-def get_files(path, exclude=lambda f: False):
+def get_files(path, exclude_func=lambda f: False):
     """Recursively get files from a directory"""
     files = []
 
-    if isinstance(exclude, list):
-        exclude_list = exclude
+    def exclude(filename):
+        for ext in exclude_func(filename):
+            if filename.endswith(ext):
+                return True
+        return False
+	
 
-        def exclude(filename):
-            for ext in exclude_list:
-                if filename.endswith(ext):
-                    return True
-            return False
+def walk(path):
+    files = []  # Declare the 'files' list variable
 
-    def walk(path):
-        for f in os.listdir(path):
-            filename = os.path.join(path, f)
-            if exclude(filename):
-                # exclude certain files
-                continue
-            elif os.path.isdir(filename):
-                # recurse directories
-                walk(filename)
-            else:
-                # record all other files
-                files.append(filename)
-    walk(path)
+    for f in os.listdir(path):
+        filename = os.path.join(path, f)
+        if exclude(filename):
+            # exclude certain files
+            continue
+        elif os.path.isdir(filename):
+            # recurse directories
+            walk(filename)  # Update recursive call to 'walk'
+        else:
+            # record all other files
+            files.append(filename)
 
-    return files
+    return files  # Move the return statement inside the function scope
+
+files = walk(path)  # Call the function with the initial path
 
 
-def get_file_lookup(files, prefix_old, prefix_new,
-                    exclude=lambda f: False):
+
+def get_file_lookup(files, prefix_old, prefix_new, exclude_func=lambda f: False):
     """Create a dictionary lookup of files"""
 
     if files is None:
-        files = get_files(prefix_old, exclude=exclude)
+        files = get_files(prefix_old, exclude=exclude_func)
 
     prefix_old = split_path(prefix_old)
     prefix_new = split_path(prefix_new)
     lookup = {}
+
+    def exclude(filename):
+        for ext in exclude_func(filename):
+            if filename.endswith(ext):
+                return True
+        return False
 
     for f in files:
         path = prefix_new + split_path(f)[len(prefix_old):]
@@ -119,33 +129,40 @@ def remove_package_dir(filename):
 #=============================================================================
 # resource files/data
 
+# Import the appropriate module where get_file_lookup is defined or imported from
+from <module_name> import get_file_lookup
+
+# Update the exclude function to match the desired exclusion behavior
+def exclude_func(filename):
+    exclude_list = [".pyc"]
+    return any(filename.endswith(ext) for ext in exclude_list)
+
 # get resources
-rc_files = get_file_lookup(None, "keepnote/rc", "rc")
-image_files = get_file_lookup(None, "keepnote/images", "images")
-efiles = get_file_lookup(None, "keepnote/extensions", "extensions",
-                         exclude=[".pyc"])
+rc_files = get_file_lookup(None, "keepnote/rc", "rc", exclude_func)
+image_files = get_file_lookup(None, "keepnote/images", "images", exclude_func)
+efiles = get_file_lookup(None, "keepnote/extensions", "extensions", exclude_func)
 freedesktop_files = [
     # application icon
-    ("share/icons/hicolor/48x48/apps",
-     ["desktop/keepnote.png"]),
+    ("share/icons/hicolor/48x48/apps", ["desktop/keepnote.png"]),
 
     # desktop menu entry
-    ("share/applications",
-     ["desktop/keepnote.desktop"])]
+    ("share/applications", ["desktop/keepnote.desktop"])
+]
 
 
-# get data files
 if "py2exe" in sys.argv:
-    data_files = rc_files.items() + efiles.items() + image_files.items()
+    data_files = {}
+    data_files.update(rc_files)
+    data_files.update(efiles)
+    data_files.update(image_files)
     package_data = {}
 
 else:
     data_files = freedesktop_files
     package_data = {'keepnote': []}
-    for v in itertools.chain(rc_files.values(),
-                             image_files.values(),
-                             efiles.values()):
-        package_data['keepnote'].extend(map(remove_package_dir, v))
+    for files_dict in [rc_files, image_files, efiles]:
+        for v in files_dict.values():
+            package_data['keepnote'].extend(map(remove_package_dir, v))
 
 
 #=============================================================================
@@ -156,16 +173,16 @@ setup(
     version=KEEPNOTE_VERSION,
     description='A cross-platform note taking application',
     long_description="""
-        KeepNote is a cross-platform note taking application.  Its features
+        KeepNote is a cross-platform note taking application.  Its features 
         include:
-
+        
         - rich text editing
-
+        
           - bullet points
           - fonts/colors
           - hyperlinks
           - inline images
-
+          
         - hierarchical organization for notes
         - full text search
         - integrated screenshot
@@ -176,8 +193,8 @@ setup(
     author='Matt Rasmussen',
     author_email='rasmus@alum.mit.edu',
     url='http://keepnote.org',
-    download_url='http://keepnote.org/download/keepnote-%s.tar.gz' % KEEPNOTE_VERSION,  # nopep8
-
+    download_url='http://keepnote.org/download/keepnote-%s.tar.gz' % KEEPNOTE_VERSION,
+    
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
@@ -194,39 +211,34 @@ setup(
         'Programming Language :: Python',
     ],
     license="GPL",
-
-    packages=[
-        'keepnote',
-        'keepnote.compat',
-        'keepnote.gui',
-        'keepnote.gui.richtext',
-        'keepnote.notebook',
-        'keepnote.notebook.connection',
-        'keepnote.notebook.connection.fs',
-        'keepnote.server',
-        'keepnote.mswin'
-    ],
+    
+    packages=['keepnote',
+              'keepnote.gui',
+              'keepnote.gui.richtext',
+              'keepnote.notebook',
+              'keepnote.notebook.connection',
+              'keepnote.notebook.connection.fs',
+              'keepnote.compat',
+              'keepnote.mswin'],
     scripts=['bin/keepnote'],
     data_files=data_files,
     package_data=package_data,
-
+    
     windows=[{
         'script': 'bin/keepnote',
         'icon_resources': [(1, 'keepnote/images/keepnote.ico')],
-        }],
+    }],
     options={
         'py2exe': {
             'packages': 'encodings',
-            'includes': 'cairo,pango,pangocairo,atk,gobject,win32com.shell,win32api,win32com,win32ui,win32gui',  # nopep8
+            'includes': 'cairo,pango,pangocairo,atk,gobject,win32com.shell,win32api,win32com,win32ui,win32gui',
             'dist_dir': 'dist/keepnote-%s.win' % KEEPNOTE_VERSION
-        },
-        #'sdist': {
-        #    'formats': 'zip',
-        #}
+        }
     }
 )
 
-
-# execute post-build script
+# Execute post-build script
 if "py2exe" in sys.argv:
-    execfile("pkg/win/post_py2exe.py")
+    with open("pkg/win/post_py2exe.py") as f:
+        code = compile(f.read(), "post_py2exe.py", 'exec')
+        exec(code)
