@@ -92,7 +92,7 @@ def update_notebook(filename, desired_version, warn=lambda w: False,
                 write_meta_data(node)
                 
                     
-            except Exception, e:
+            except Exception as e:
                 if not warn(e):
                     raise notebooklib.NoteBookError("Could not update notebook", e)
 
@@ -122,7 +122,7 @@ def write_meta_data(node):
         out.write("<node>\n"
                   "<version>2</version>\n")
 
-        for key, val in node._attr.iteritems():
+        for key, val in node._attr.items():
             attr = node._notebook.notebook_attrs.get(key, None)
 
             if attr is not None:
@@ -134,6 +134,6 @@ def write_meta_data(node):
 
         out.write("</node>\n")
         out.close()
-    except Exception, e:
+    except Exception as e:
         raise notebooklib.NoteBookError("Cannot write meta data", e)
 

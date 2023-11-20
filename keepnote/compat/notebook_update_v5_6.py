@@ -33,7 +33,7 @@ import xml.etree.cElementTree as ET
 
 def new_nodeid():
     """Generate a new node id"""
-    return unicode(uuid.uuid4())
+    return str(uuid.uuid4())
 
 
 def iter_child_node_paths(path):
@@ -43,7 +43,7 @@ def iter_child_node_paths(path):
 
     for child in children:
         child_path = os.path.join(path, child)
-        if os.path.isfile(os.path.join(child_path, u"node.xml")):
+        if os.path.isfile(os.path.join(child_path, "node.xml")):
             yield child_path
 
 
@@ -64,12 +64,12 @@ class AttrDef (object):
             self.default = datatype
         else:
             self.default = default
-
+        
         # writer function
         if datatype == bool:
-            self.write = lambda x: unicode(int(x))
+            self.write = lambda x: str(int(x))
         else:
-            self.write = unicode
+            self.write = str
 
         # reader function
         if datatype == bool:
@@ -77,7 +77,7 @@ class AttrDef (object):
         else:
             self.read = datatype
 
-
+        
 class UnknownAttr (object):
     """A value that belongs to an unknown AttrDef"""
 
@@ -86,30 +86,30 @@ class UnknownAttr (object):
 
 
 g_default_attr_defs = [
-    AttrDef("nodeid", unicode, "Node ID", default=new_nodeid),
-    AttrDef("content_type", unicode, "Content type",
+    AttrDef("nodeid", str, "Node ID", default=new_nodeid),
+    AttrDef("content_type", str, "Content type", 
             default=lambda: CONTENT_TYPE_DIR),
-    AttrDef("title", unicode, "Title"),
-    AttrDef("order", int, "Order", default=lambda: sys.maxint),
+    AttrDef("title", str, "Title"),
+    AttrDef("order", int, "Order", default=lambda: sys.maxsize),
     AttrDef("created_time", int, "Created time", default=get_timestamp),
     AttrDef("modified_time", int, "Modified time", default=get_timestamp),
     AttrDef("expanded", bool, "Expaned", default=lambda: True),
     AttrDef("expanded2", bool, "Expanded2", default=lambda: True),
-    AttrDef("info_sort", unicode, "Folder sort", default=lambda: "order"),
+    AttrDef("info_sort", str, "Folder sort", default=lambda: "order"),
     AttrDef("info_sort_dir", int, "Folder sort direction", default=lambda: 1),
-    AttrDef("icon", unicode, "Icon"),
-    AttrDef("icon_open", unicode, "Icon open"),
-    AttrDef("payload_filename", unicode, "Filename"),
-    AttrDef("duplicate_of", unicode, "Duplicate of")
+    AttrDef("icon", str, "Icon"),
+    AttrDef("icon_open", str, "Icon open"),
+    AttrDef("payload_filename", str, "Filename"),
+    AttrDef("duplicate_of", str, "Duplicate of")
 ]
 
 g_attr_defs_lookup = dict((attr.key, attr) for attr in g_default_attr_defs)
 
 
 def read_attr_v5(filename, attr_defs=g_attr_defs_lookup):
-
+    
     attr = {}
-
+    
     tree = ET.ElementTree(file=filename)
 
     # check root
@@ -140,14 +140,14 @@ def read_attr_v5(filename, attr_defs=g_attr_defs_lookup):
 
     return attr
 
-
+    
 def write_attr_v6(filename, attr):
     out = safefile.open(filename, "w", codec="utf-8")
-    out.write(u'<?xml version="1.0" encoding="UTF-8"?>\n'
-              u'<node>\n'
-              u'<version>%d</version>\n' % attr["version"])
+    out.write('<?xml version="1.0" encoding="UTF-8"?>\n'
+              '<node>\n'
+              '<version>%d</version>\n' % attr["version"])
     plist.dump(attr, out, indent=2, depth=0)
-    out.write(u'</node>\n')
+    out.write('</node>\n')
     out.close()
 
 
@@ -155,30 +155,29 @@ def convert_node_attr(filename, filename2, attr_defs=g_attr_defs_lookup):
     """Convert a node.xml file from version 5 to 6"""
 
     keepnote.log_message("converting '%s'...\n" % filename2)
-
+    
     try:
         attr = read_attr_v5(filename, attr_defs)
         attr["version"] = 6
         write_attr_v6(filename2, attr)
-    except Exception, e:
-        keepnote.log_error("cannot convert %s: %s\n" % (filename, str(e)),
+    except Exception as e:
+        keepnote.log_error("cannot convert %s: %s\n" % (filename, str(e)), 
                            sys.exc_info()[2])
-
-
+                           
+    
 
 
 def update(filename):
-    filename = unicode(filename)
 
     def walk(path):
-        nodepath = os.path.join(path, u"node.xml")
+        nodepath = os.path.join(path, "node.xml")
         convert_node_attr(nodepath, nodepath)
         for path2 in iter_child_node_paths(path):
             walk(path2)
-
+    
     walk(filename)
 
-    preffile = os.path.join(filename, u"notebook.nbk")
+    preffile = os.path.join(filename, "notebook.nbk")
     etree = ET.ElementTree(file=preffile)
     root = etree.getroot()
     root.find("version").text = "6"

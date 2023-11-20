@@ -30,16 +30,16 @@
 # errors
 
 
-class ConnectionError (StandardError):
+class ConnectionError (Exception):
     def __init__(self, msg, error=None):
-        StandardError.__init__(self, msg)
+        Exception.__init__(self, msg)
         self.error = error
 
     def repr(self):
         if self.error is not None:
-            return StandardError.repr(self) + ": " + repr(self.error)
+            return Exception.repr(self) + ": " + repr(self.error)
         else:
-            return StandardError.repr(self)
+            return Exception.repr(self)
 
 class UnknownNode (ConnectionError):
     def __init__(self, msg="unknown node"):
@@ -208,7 +208,7 @@ class NoteBookConnection (object):
 
 
     # Is this needed inside the connection?  Can it be support outside?
-    def new_filename(self, nodeid, new_filename, ext=u"", sep=u" ", number=2, 
+    def new_filename(self, nodeid, new_filename, ext="", sep=" ", number=2, 
                      return_number=False, use_number=False, ensure_valid=True):
         pass
 

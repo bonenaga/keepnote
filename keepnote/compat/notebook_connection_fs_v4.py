@@ -100,13 +100,13 @@ _ = trans.translate
 
 # constants
 
-XML_HEADER = u"""\
+XML_HEADER = """\
 <?xml version="1.0" encoding="UTF-8"?>
 """
 
-NODE_META_FILE = u"node.xml"
-NOTEBOOK_META_DIR = u"__NOTEBOOK__"
-LOSTDIR = u"lost_found"
+NODE_META_FILE = "node.xml"
+NOTEBOOK_META_DIR = "__NOTEBOOK__"
+LOSTDIR = "lost_found"
 MAX_LEN_NODE_FILENAME = 40
 
 
@@ -138,9 +138,9 @@ def path_local2node(filename):
       aaa\bbb\ccc  =>  aaa/bbb/ccc
     """
 
-    if os.path.sep == u"/":
+    if os.path.sep == "/":
         return filename
-    return filename.replace(os.path.sep, u"/")
+    return filename.replace(os.path.sep, "/")
 
 
 def path_node2local(filename):
@@ -156,9 +156,9 @@ def path_node2local(filename):
       aaa/bbb/ccc  =>  aaa\bbb\ccc
     """
     
-    if os.path.sep == u"/":
+    if os.path.sep == "/":
         return filename
-    return filename.replace(u"/", os.path.sep)
+    return filename.replace("/", os.path.sep)
     
 
 def get_node_filename(node_path, filename):
@@ -174,11 +174,11 @@ def get_node_filename(node_path, filename):
 #=============================================================================
 # functions for ensuring valid filenames in notebooks
 
-REGEX_SLASHES = re.compile(ur"[/\\]")
-REGEX_BAD_CHARS = re.compile(ur"[\?'&<>|`:;]")
-REGEX_LEADING_UNDERSCORE = re.compile(ur"^__+")
+REGEX_SLASHES = re.compile(r"[/\\]")
+REGEX_BAD_CHARS = re.compile(r"[\?'&<>|`:;]")
+REGEX_LEADING_UNDERSCORE = re.compile(r"^__+")
 
-def get_valid_filename(filename, default=u"folder", 
+def get_valid_filename(filename, default="folder", 
                        maxlen=MAX_LEN_NODE_FILENAME):
     """
     Converts a filename into a valid one
@@ -187,16 +187,16 @@ def get_valid_filename(filename, default=u"folder",
     """
     
     filename = filename[:maxlen]
-    filename = re.sub(REGEX_SLASHES, u"-", filename)
-    filename = re.sub(REGEX_BAD_CHARS, u"", filename)
-    filename = filename.replace(u"\t", " ")
-    filename = filename.strip(u" \t.")
+    filename = re.sub(REGEX_SLASHES, "-", filename)
+    filename = re.sub(REGEX_BAD_CHARS, "", filename)
+    filename = filename.replace("\t", " ")
+    filename = filename.strip(" \t.")
     
     # don't allow files to start with two underscores
-    filename = re.sub(REGEX_LEADING_UNDERSCORE, u"", filename)
+    filename = re.sub(REGEX_LEADING_UNDERSCORE, "", filename)
     
     # don't allow pure whitespace filenames
-    if filename == u"":
+    if filename == "":
         filename = default
     
     # use only lower case, some filesystems have trouble with mixed case
@@ -206,7 +206,7 @@ def get_valid_filename(filename, default=u"folder",
     
 
 
-def get_valid_unique_filename(path, filename, ext=u"", sep=u" ", number=2):
+def get_valid_unique_filename(path, filename, ext="", sep=" ", number=2):
     """Returns a valid and unique version of a filename for a given path"""
     return keepnote.compat.notebook_v4.get_unique_filename(
         path, get_valid_filename(filename), ext, sep, number)
@@ -224,7 +224,7 @@ def iter_child_node_paths(path):
 
     for child in children:
         child_path = os.path.join(path, child)
-        if os.path.isfile(os.path.join(child_path, u"node.xml")):
+        if os.path.isfile(os.path.join(child_path, "node.xml")):
             yield child_path
 
 
@@ -252,8 +252,8 @@ def last_node_change(path):
 
     for dirpath, dirnames, filenames in os.walk(path):
         mtime = max(mtime, stat(dirpath).st_mtime)
-        if u"node.xml" in filenames:
-            mtime = max(mtime, stat(join(dirpath, u"node.xml")).st_mtime)
+        if "node.xml" in filenames:
+            mtime = max(mtime, stat(join(dirpath, "node.xml")).st_mtime)
     
     return mtime
 
@@ -312,7 +312,7 @@ class PathCache (object):
     An in-memory cache of filesystem paths for nodeids
     """
 
-    def __init__(self, rootid=None, rootpath=u""):
+    def __init__(self, rootid=None, rootpath=""):
         self._nodes = {None: None}
         
         if rootid:
@@ -565,14 +565,14 @@ class NoteBookConnectionFS (NoteBookConnection):
             os.makedirs(lostdir)
 
         new_filename = keepnote.compat.notebook_v4.get_unique_filename(
-            lostdir, os.path.basename(filename),  sep=u"-")
+            lostdir, os.path.basename(filename),  sep="-")
         
-        keepnote.log_message(u"moving data to lostdir '%s' => '%s'\n" % 
+        keepnote.log_message("moving data to lostdir '%s' => '%s'\n" % 
                              (filename, new_filename))
         try:
             os.rename(filename, new_filename)
-        except OSError, e:
-            raise ConnectionError(u"unable to store lost file '%s'" 
+        except OSError as e:
+            raise ConnectionError("unable to store lost file '%s'" 
                                   % filename, e)
         
     #======================
@@ -654,7 +654,7 @@ class NoteBookConnectionFS (NoteBookConnection):
             self._write_attr(self._get_node_attr_file(nodeid, path), 
                              attr, self._attr_defs)
             self._path_cache.add(nodeid, basename, parentid)
-        except OSError, e:
+        except OSError as e:
             raise keepnote.compat.notebook_v4.NoteBookError(_("Cannot create node"), e)
         
         # update index
@@ -715,7 +715,7 @@ class NoteBookConnectionFS (NoteBookConnection):
             # move to a new parent
             self._rename_node_dir(nodeid, attr, parentid, parentid2, path)
         elif (parentid and title_index and 
-              title_index != attr.get("title", u"")):
+              title_index != attr.get("title", "")):
             # rename node directory, but
             # do not rename root node dir (parentid is None)
             self._rename_node_dir(nodeid, attr, parentid, parentid2, path)
@@ -736,9 +736,9 @@ class NoteBookConnectionFS (NoteBookConnection):
 
         try:
             os.rename(path, new_path)
-        except OSError, e:
+        except OSError as e:
             raise keepnote.compat.notebook_v4.NoteBookError(
-                _(u"Cannot rename '%s' to '%s'" % (path, new_path)), e)
+                _("Cannot rename '%s' to '%s'" % (path, new_path)), e)
         
         # update index
         basename = os.path.basename(new_path)
@@ -762,9 +762,9 @@ class NoteBookConnectionFS (NoteBookConnection):
 
         try:
             shutil.rmtree(self._get_node_path(nodeid))
-        except OSError, e:
+        except OSError as e:
             raise keepnote.compat.notebook_v4.NoteBookError(
-                _(u"Do not have permission to delete"), e)
+                _("Do not have permission to delete"), e)
 
         # TODO: remove from index entire subtree
 
@@ -799,7 +799,7 @@ class NoteBookConnectionFS (NoteBookConnection):
             files = os.listdir(path)
         except:
             raise keepnote.compat.notebook_v4.NoteBookError(
-                _(u"Do not have permission to read folder contents: %s") 
+                _("Do not have permission to read folder contents: %s") 
                 % path, e)           
         
         for filename in files:
@@ -807,8 +807,8 @@ class NoteBookConnectionFS (NoteBookConnection):
             if os.path.exists(get_node_meta_file(path2)):
                 try:
                     yield self._read_node(nodeid, path2, _full=_full)
-                except keepnote.compat.notebook_v4.NoteBookError, e:
-                    keepnote.log_error(u"error reading %s" % path2)
+                except keepnote.compat.notebook_v4.NoteBookError as e:
+                    keepnote.log_error("error reading %s" % path2)
                     continue
                     # TODO: raise warning, not all children read
 
@@ -891,7 +891,7 @@ class NoteBookConnectionFS (NoteBookConnection):
 
         if warn:
             keepnote.log_message(
-                u"Unmanaged change detected. Reindexing '%s'\n" % path)
+                "Unmanaged change detected. Reindexing '%s'\n" % path)
 
         # TODO: to prevent a full recurse I could index children but 
         # use 0 for mtime, so that they will still trigger an index for them
@@ -922,33 +922,33 @@ class NoteBookConnectionFS (NoteBookConnection):
         try:
             out = safefile.open(filename, "w", codec="utf-8")
             out.write(XML_HEADER)
-            out.write(u"<node>\n"
-                      u"<version>%s</version>\n" % 
+            out.write("<node>\n"
+                      "<version>%s</version>\n" % 
                       keepnote.compat.notebook_v4.NOTEBOOK_FORMAT_VERSION)
             
-            for key, val in attr.iteritems():
+            for key, val in attr.items():
                 if key in self._attr_suppress:
                     continue
 
                 attr_def = attr_defs.get(key, None)
                 
                 if attr_def is not None:
-                    out.write(u'<attr key="%s">%s</attr>\n' %
+                    out.write('<attr key="%s">%s</attr>\n' %
                               (key, escape(attr_def.write(val))))
                 elif key == "version":
                     # skip version attr
                     pass
                 elif isinstance(val, keepnote.compat.notebook_v4.UnknownAttr):
                     # write unknown attrs if they are strings
-                    out.write(u'<attr key="%s">%s</attr>\n' %
+                    out.write('<attr key="%s">%s</attr>\n' %
                               (key, escape(val.value)))
                 else:
                     # drop attribute
                     pass
                 
-            out.write(u"</node>\n")
+            out.write("</node>\n")
             out.close()
-        except Exception, e:
+        except Exception as e:
             raise keepnote.compat.notebook_v4.NoteBookError(
                 _("Cannot write meta data"), e)
 
@@ -960,13 +960,13 @@ class NoteBookConnectionFS (NoteBookConnection):
 
         try:
             tree = ET.ElementTree(file=filename)
-        except Exception, e:
+        except Exception as e:
             if recover:
                 self._recover_attr(filename)
                 return self._read_attr(filename, attr_defs, recover=False)
             
             raise keepnote.compat.notebook_v4.NoteBookError(
-                _(u"Error reading meta data file '%s'" % filename), e)
+                _("Error reading meta data file '%s'" % filename), e)
 
         # check root
         root = tree.getroot()
@@ -999,7 +999,7 @@ class NoteBookConnectionFS (NoteBookConnection):
             out.write("<node></node>")
             out.close()
         except:
-            keepnote.log_error(u"failed to recover '%s'" % filename)
+            keepnote.log_error("failed to recover '%s'" % filename)
             pass
 
 
@@ -1168,7 +1168,7 @@ class NoteBookConnectionFS (NoteBookConnection):
             shutil.copytree(fullname1, fullname2)
 
 
-    def new_filename(self, nodeid, new_filename, ext=u"", sep=u" ", number=2, 
+    def new_filename(self, nodeid, new_filename, ext="", sep=" ", number=2, 
                      return_number=False, use_number=False, ensure_valid=True,
                      _path=None):
 
@@ -1249,7 +1249,7 @@ class NoteBookConnectionFS (NoteBookConnection):
         
         datatype = self._attr_defs[key].datatype
         
-        if issubclass(datatype, basestring):
+        if issubclass(datatype, str):
             index_type = "TEXT"
         elif issubclass(datatype, int):
             index_type = "INTEGER"

@@ -46,7 +46,7 @@ ELEMENT_NODE = xml.dom.Node.ELEMENT_NODE
 
 
 
-class XmlError (StandardError):
+class XmlError (Exception):
     """Error for parsing XML"""
     pass
 
@@ -95,7 +95,7 @@ class Tag (object):
                 child_tag.write(obj, out)
         elif self._write_data:
             text = self._write_data(obj)
-            if not isinstance(text, basestring):
+            if not isinstance(text, str):
                 raise XmlError("bad text (%s,%s): %s" %
                                (self.name, str(self._object),
                                 str(type(text))))
@@ -125,7 +125,7 @@ class Tag (object):
             
             try:
                 self._read_data(self._object, data)
-            except Exception, e:
+            except Exception as e:
                 raise XmlError("Error parsing tag '%s': %s" % (self.name,
                                                                str(e)))
 
@@ -179,7 +179,7 @@ class TagMany (Tag):
             try:
                 if self._read_item is not None:
                     self._read_item((self._object, self._index), data)
-            except Exception, e:
+            except Exception as e:
                 raise XmlError("Error parsing tag '%s': %s" % (tag.name,
                                                                str(e)))
         
@@ -247,7 +247,7 @@ class XmlObject (object):
             
     
     def read(self, obj, filename):
-        if isinstance(filename, basestring):
+        if isinstance(filename, str):
             infile = open(filename, "r")
         else:
             infile = filename
@@ -262,18 +262,18 @@ class XmlObject (object):
 
         try:
             parser.ParseFile(infile)
-        except xml.parsers.expat.ExpatError, e:
+        except xml.parsers.expat.ExpatError as e:
             raise XmlError("Error reading file '%s': %s" % (filename, str(e)))
 
         if len(self._current_tags) > 1:
-            print [x.name for x in self._current_tags]
+            print([x.name for x in self._current_tags])
             raise XmlError("Incomplete file '%s'" % filename)
         
         infile.close()
 
             
     def write(self, obj, filename):
-        if isinstance(filename, basestring):
+        if isinstance(filename, str):
             #out = codecs.open(filename, "w", "utf-8")
             out = safefile.open(filename, "w", codec="utf-8")
             #out = file(filename, "w")
@@ -292,7 +292,7 @@ class XmlObject (object):
 
 
 if __name__ == "__main__":
-    import StringIO
+    import io
 
     parser = XmlObject(
         Tag("notebook", tags=[
@@ -312,19 +312,19 @@ if __name__ == "__main__":
                 set=lambda s: "%d" % s.hsash_pos),
             Tag("external_apps", tags=[
                 TagMany("app",
-                        iterfunc=lambda s: range(len(s.apps)),
+                        iterfunc=lambda s: list(range(len(s.apps))),
                         get=lambda (s,i), x: s.apps.append(x),
-                        set=lambda (s,i): s.apps[i])]),
+                        set=lambda s_i2: s_i2[0].apps[s_i2[1]])]),
             Tag("external_apps2", tags=[
                 TagMany("app",
-                        iterfunc=lambda s: range(len(s.apps2)),
+                        iterfunc=lambda s: list(range(len(s.apps2))),
                         before=lambda s,i: s.apps2.append([None, None]),
                         tags=[Tag("name",
                                   get=lambda (s,i),x: s.apps2[i].__setitem__(0, x),
-                                  set=lambda (s,i): s.apps2[i][0]),
+                                  set=lambda s_i: s_i[0].apps2[s_i[1]][0]),
                               Tag("prog",
                                   get=lambda (s,i),x: s.apps2[i].__setitem__(1,x),
-                                  set=lambda (s,i): s.apps2[i][1])
+                                  set=lambda s_i1: s_i1[0].apps2[s_i1[1]][1])
                         ])
             ]),
         ]))
@@ -348,7 +348,7 @@ if __name__ == "__main__":
     
     util.tic("run")
 
-    infile = StringIO.StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+    infile = io.StringIO("""<?xml version="1.0" encoding="UTF-8"?>
        <notebook>
        <window_size>1053,905</window_size>
 <window_pos>0,0</window_pos>
@@ -365,7 +365,7 @@ if __name__ == "__main__":
        </notebook>
     """)
     
-    for i in xrange(1):#0000):
+    for i in range(1):#0000):
         pref = Pref()
         pref.read(infile)
         pref.write(sys.stdout)
