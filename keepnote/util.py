@@ -25,27 +25,29 @@
 #
 
 
+
 class PushIter (object):
-    """
-    Wrap an iterator in another iterator that allows one to push new
-    items onto the front of the iteration stream
-    """
+    """Wrap an iterator in another iterator that allows one to push new
+       items onto the front of the iteration stream"""
+    
     def __init__(self, it):
         self._it = iter(it)
         self._queue = []
 
     def __iter__(self):
         return self
-
-    def next(self):
+        
+    def __next__(self):
         if len(self._queue) > 0:
             return self._queue.pop()
         else:
-            return self._it.next()
+            return next(self._it)
 
     def push(self, item):
         """Push a new item onto the front of the iteration stream"""
         self._queue.append(item)
+
+
 
 
 def compose2(f, g):
@@ -55,16 +57,18 @@ def compose2(f, g):
     compose2(f, g)(x) <==> f(g(x))
     """
     return lambda *args, **kargs: f(g(*args, **kargs))
-
+    
 
 def compose(*funcs):
     """Composes two or more functions into one function
-
+    
        example:
        compose(f,g)(x) <==> f(g(x))
     """
+
     funcs = reversed(funcs)
-    f = funcs.next()
+    f = next(funcs)
     for g in funcs:
         f = compose2(g, f)
     return f
+

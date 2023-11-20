@@ -1,7 +1,7 @@
 """
 
     Simple implementation of the XDG Base Directory Specification
-
+    
     http://standards.freedesktop.org/basedir-spec/basedir-spec-0.6.html
 
 """
@@ -29,41 +29,41 @@
 import os
 import sys
 
-# constants
-ENV_CONFIG = u"XDG_CONFIG_HOME"
-ENV_CONFIG_DIRS = u"XDG_CONFIG_DIRS"
-ENV_DATA = u"XDG_DATA_HOME"
-ENV_DATA_DIRS = u"XDG_DATA_DIRS"
 
-DEFAULT_CONFIG_DIR = u".config"
-DEFAULT_CONFIG_DIRS = u"/etc/xdg"
-DEFAULT_DATA_DIR = u".local/share"
-DEFAULT_DATA_DIRS = u"/usr/local/share/:/usr/share/"
+# constants
+ENV_CONFIG = "XDG_CONFIG_HOME"
+ENV_CONFIG_DIRS = "XDG_CONFIG_DIRS"
+ENV_DATA = "XDG_DATA_HOME"
+ENV_DATA_DIRS = "XDG_DATA_DIRS"
+
+DEFAULT_CONFIG_DIR = ".config"
+DEFAULT_CONFIG_DIRS = "/etc/xdg"
+DEFAULT_DATA_DIR = ".local/share"
+DEFAULT_DATA_DIRS = "/usr/local/share/:/usr/share/"
 
 # global cache
 g_config_dirs = None
 g_data_dirs = None
 
 
-class XdgError (StandardError):
+class XdgError (Exception):
     pass
-
+    
 
 FS_ENCODING = object()
-
-
 def ensure_unicode(text, encoding="utf8"):
     """Ensures a string is unicode"""
 
     if text is None:
         return None
 
-    if not isinstance(text, unicode):
+    if not isinstance(text, str):
         if encoding == FS_ENCODING:
-            return unicode(text, sys.getfilesystemencoding())
+            return str(text, sys.getfilesystemencoding())
         else:
-            return unicode(text, encoding)
+            return str(text, encoding)
     return text
+
 
 
 def get_config_dirs(home=None, cache=True):
@@ -86,11 +86,11 @@ def get_config_dirs(home=None, cache=True):
         if home is None:
             home = ensure_unicode(os.getenv("HOME"), FS_ENCODING)
             if home is None:
-                raise XdgError("HOME environment variable must be specified")
+                raise EnvError("HOME environment variable must be specified")
         config = os.path.join(home, DEFAULT_CONFIG_DIR)
 
     # get alternate user config dirs
-    config_dirs = ensure_unicode(os.getenv(ENV_CONFIG_DIRS,
+    config_dirs = ensure_unicode(os.getenv(ENV_CONFIG_DIRS, 
                                            DEFAULT_CONFIG_DIRS),
                                  FS_ENCODING)
 
@@ -98,12 +98,13 @@ def get_config_dirs(home=None, cache=True):
         config_dirs = DEFAULT_CONFIG_DIRS
 
     # make config path
-    config_dirs = [config] + config_dirs.split(u":")
+    config_dirs = [config] + config_dirs.split(":")
 
     if cache:
         g_config_dirs = config_dirs
 
     return config_dirs
+
 
 
 def get_data_dirs(home=None, cache=True):
@@ -126,7 +127,7 @@ def get_data_dirs(home=None, cache=True):
         if home is None:
             home = ensure_unicode(os.getenv("HOME"), FS_ENCODING)
             if home is None:
-                raise XdgError("HOME environment variable must be specified")
+                raise EnvError("HOME environment variable must be specified")
         data = os.path.join(home, DEFAULT_DATA_DIR)
 
     # get alternate user config dirs
@@ -136,7 +137,7 @@ def get_data_dirs(home=None, cache=True):
         data_dirs = DEFAULT_DATA_DIRS
 
     # make data path
-    data_dirs = [data] + data_dirs.split(u":")
+    data_dirs = [data] + data_dirs.split(":")
 
     if cache:
         g_data_dirs = data_dirs
@@ -159,7 +160,7 @@ def lookup_file(filename, paths, default=False):
         return os.path.join(paths[0], filename)
     else:
         return None
-
+    
 
 def get_config_file(filename, config_dirs=None, default=False,
                     home=None, cache=True):
@@ -169,6 +170,7 @@ def get_config_file(filename, config_dirs=None, default=False,
 
     config_dir  -- list of directories to search for file
     """
+
     if config_dirs is None:
         config_dirs = get_config_dirs(home=home, cache=cache)
 
@@ -183,6 +185,7 @@ def get_data_file(filename, data_dirs=None, default=False,
 
     config_dir  -- list of directories to search for file
     """
+
     if data_dirs is None:
         data_dirs = get_data_dirs(home=home, cache=cache)
 
@@ -194,22 +197,30 @@ def make_config_dir(dirname, config_dirs=None,
     """
     Make a configuration directory
     """
+
     if config_dirs is None:
         config_dirs = get_config_dirs(home=home, cache=cache)
     config_dir = os.path.join(config_dirs[0], dirname)
 
     if not os.path.exists(config_dir):
-        os.makedirs(config_dir, mode=0700)
+        os.makedirs(config_dir, mode=0o700)
 
 
 def make_data_dir(dirname, data_dirs=None,
                   home=None, cache=True):
+    
     """
     Make a data directory
     """
+    
     if data_dirs is None:
         data_dirs = get_data_dirs(home=home, cache=cache)
     data_dir = os.path.join(data_dirs[0], dirname)
 
     if not os.path.exists(data_dir):
-        os.makedirs(data_dir, mode=0700)
+        os.makedirs(data_dir, mode=0o700)
+
+
+
+
+

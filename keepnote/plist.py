@@ -1,7 +1,7 @@
 """
     KeepNote
     extended plist module
-
+    
     Apple's property list xml serialization
 
     - added null type
@@ -32,12 +32,10 @@ try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.elementtree.ElementTree as ET
-from StringIO import StringIO
-import base64
-import datetime
-import re
-import sys
+from io import StringIO
 from xml.sax.saxutils import escape
+import base64, datetime, re
+import sys
 
 try:
     from .orderdict import OrderDict
@@ -51,21 +49,21 @@ class Data (object):
 
 
 # date format:
-# ISO 8601 (in particular, YYYY '-' MM '-' DD 'T' HH ':' MM ':' SS 'Z'.
+# ISO 8601 (in particular, YYYY '-' MM '-' DD 'T' HH ':' MM ':' SS 'Z'.  
 # Smaller units may be omitted with a loss of precision
 
 
 _unmarshallers = {
     # collections
     "array": lambda x: [v.text for v in x],
-    "dict": lambda x: OrderDict(
-        (x[i].text, x[i+1].text) for i in range(0, len(x), 2)),
-    "key": lambda x: x.text or u"",
+    "dict": lambda x:
+       OrderDict((x[i].text, x[i+1].text) for i in range(0, len(x), 2)),
+    "key": lambda x: x.text or "",
 
     # simple types
-    "string": lambda x: x.text or u"",
-    "data": lambda x: Data(base64.decodestring(x.text or u"")),
-    "date": lambda x: datetime.datetime(*map(int, re.findall("\d+", x.text))),
+    "string": lambda x: x.text or "",
+    "data": lambda x: Data(base64.decodestring(x.text or "")),
+    "date": lambda x: datetime.datetime(*list(map(int, re.findall("\d+", x.text)))),
     "true": lambda x: True,
     "false": lambda x: False,
     "real": lambda x: float(x.text),
@@ -90,7 +88,7 @@ def load(infile=sys.stdin):
     return parser.root.text
 
 
-def loads(string):
+def loads(string): 
     return load(StringIO(string))
 
 
@@ -107,68 +105,68 @@ def load_etree(elm):
         raise IOError("unknown plist type: %r" % elm.tag)
 
     return elm.text
-
+   
 
 def dump(elm, out=sys.stdout, indent=0, depth=0, suppress=False):
 
     if indent and not suppress:
-        out.write(" " * depth)
+       out.write(" " * depth)
 
     if isinstance(elm, dict):
-        out.write(u"<dict>")
+        out.write("<dict>")
         if indent:
-            out.write(u"\n")
-        for key, val in elm.iteritems():
+           out.write("\n")
+        for key, val in elm.items():
             if indent:
                 out.write(" " * (depth + indent))
-            out.write(u"<key>%s</key>" % key)
+            out.write("<key>%s</key>" % key)
             dump(val, out, indent, depth+indent, suppress=True)
         if indent:
             out.write(" " * depth)
-        out.write(u"</dict>")
+        out.write("</dict>")
 
     elif isinstance(elm, (list, tuple)):
-        out.write(u"<array>")
+        out.write("<array>")
         if indent:
-            out.write(u"\n")
+           out.write("\n")
         for item in elm:
             dump(item, out, indent, depth+indent)
         if indent:
             out.write(" " * depth)
-        out.write(u"</array>")
+        out.write("</array>")
 
-    elif isinstance(elm, basestring):
-        out.write(u"<string>%s</string>" % escape(elm))
+    elif isinstance(elm, str):
+        out.write("<string>%s</string>" % escape(elm))
 
     elif isinstance(elm, bool):
         if elm:
-            out.write(u"<true/>")
+            out.write("<true/>")
         else:
-            out.write(u"<false/>")
+            out.write("<false/>")
 
-    elif isinstance(elm, (int, long)):
-        out.write(u"<integer>%d</integer>" % elm)
+    elif isinstance(elm, int):
+        out.write("<integer>%d</integer>" % elm)
 
     elif isinstance(elm, float):
-        out.write(u"<real>%f</real>" % elm)
+        out.write("<real>%f</real>" % elm)
 
     elif elm is None:
-        out.write(u"<null/>")
+        out.write("<null/>")
 
     elif isinstance(elm, Data):
-        out.write(u"<data>")
+        out.write("<data>")
         base64.encode(StringIO(elm), out)
-        out.write(u"</data>")
+        out.write("</data>")
 
     elif isinstance(elm, datetime.datetime):
         raise Exception("not implemented")
 
     else:
-        raise Exception("unknown data type '%s' for value '%s'" %
+        raise Exception("unknown data type '%s' for value '%s'" % 
                         (str(type(elm)), str(elm)))
 
     if indent:
-        out.write(u"\n")
+       out.write("\n")
 
 
 def dumps(elm, indent=0):
@@ -178,9 +176,10 @@ def dumps(elm, indent=0):
 
 
 def dump_etree(elm):
+    
     if isinstance(elm, dict):
         elm2 = ET.Element("dict")
-        for key, val in elm.iteritems():
+        for key, val in elm.items():
             key2 = ET.Element("key")
             key2.text = key
             elm2.append(key2)
@@ -191,7 +190,7 @@ def dump_etree(elm):
         for item in elm:
             elm2.append(dump_etree(item))
 
-    elif isinstance(elm, basestring):
+    elif isinstance(elm, str):
         elm2 = ET.Element("string")
         elm2.text = elm
 
@@ -220,7 +219,8 @@ def dump_etree(elm):
         raise Exception("not implemented")
 
     else:
-        raise Exception("unknown data type '%s' for value '%s'" %
+        raise Exception("unknown data type '%s' for value '%s'" % 
                         (str(type(elm)), str(elm)))
 
     return elm2
+
