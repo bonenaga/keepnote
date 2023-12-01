@@ -3218,7 +3218,7 @@ class CheetahTemplate(BaseTemplate):
 class Jinja2Template(BaseTemplate):
     def prepare(self, filters=None, tests=None, globals={}, **kwargs):
         from jinja2 import Environment, FunctionLoader
-        self.env = Environment(loader=FunctionLoader(self.loader), **kwargs)
+        self.env = Environment(loader=FunctionLoader(self.loader), **kwargs, autoescape=True)
         if filters: self.env.filters.update(filters)
         if tests: self.env.tests.update(tests)
         if globals: self.env.globals.update(globals)
