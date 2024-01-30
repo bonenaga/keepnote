@@ -86,7 +86,7 @@ class Extension (extension.Extension):
         if not os.path.exists(config):
             self.save_config()
         else:
-            self.format = open(config).readline()
+            self.format = open(config).readline(5_000_000)
         
 
     def save_config(self):
