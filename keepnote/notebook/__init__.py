@@ -57,6 +57,7 @@ import keepnote
 from keepnote.notebook.connection.fs import get_valid_unique_filename
 from keepnote.notebook.connection.fs import index as notebook_index
 from keepnote.notebook import sync
+import defusedxml.ElementTree
 
 _ = trans.translate
 
@@ -1814,7 +1815,7 @@ class NoteBook (NoteBookNode):
         try:
             if infile is None:
                 infile = self.open_file(PREF_FILE, "r", codec="utf-8")
-            root = ET.fromstring(infile.read())
+            root = defusedxml.ElementTree.fromstring(infile.read())
             tree = ET.ElementTree(root)
         except IOError as e:
             raise NoteBookError(_("Cannot read notebook preferences %s")
