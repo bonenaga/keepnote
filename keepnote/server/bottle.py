@@ -14,6 +14,7 @@ License: MIT (see LICENSE for details)
 """
 
 from __future__ import with_statement
+from security import safe_command
 
 __author__ = 'Marcel Hellkamp'
 __version__ = '0.13-dev'
@@ -2978,7 +2979,7 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
                 environ = os.environ.copy()
                 environ['BOTTLE_CHILD'] = 'true'
                 environ['BOTTLE_LOCKFILE'] = lockfile
-                p = subprocess.Popen(args, env=environ)
+                p = safe_command.run(subprocess.Popen, args, env=environ)
                 while p.poll() is None: # Busy wait...
                     os.utime(lockfile, None) # I am alive!
                     time.sleep(interval)
