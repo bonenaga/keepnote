@@ -34,8 +34,8 @@ import time
 import shutil
 import urllib.request, urllib.parse, urllib.error
 import xml.dom
-from xml.dom import minidom
 from xml.sax.saxutils import escape
+import defusedxml.minidom
 
 
 _ = gettext.gettext
@@ -429,7 +429,7 @@ def export_notebook(notebook, filename, task):
         filename2 = os.path.join(arcname, "page.html")
         
         try:
-            dom = minidom.parse(filename)
+            dom = defusedxml.minidom.parse(filename)
                         
         except Exception as e:
             # error parsing file, use simple file export
