@@ -32,7 +32,6 @@ from itertools import chain
 import os
 import tempfile
 import re
-import random
 import io
 import urllib.parse
 import uuid
@@ -41,6 +40,8 @@ from xml.sax.saxutils import escape
 
 # pygtk imports
 import pygtk
+import secrets
+
 pygtk.require('2.0')
 import gtk, gobject, pango
 from gtk import gdk
@@ -102,7 +103,7 @@ QUOTE_FORMAT = 'from <a href="%u">%t</a>:<br/>%s'
 
 # mime types
 # richtext mime type is process specific
-MIME_RICHTEXT = "application/x-richtext" + str(random.randint(1, 100000))
+MIME_RICHTEXT = "application/x-richtext" + str(secrets.SystemRandom().randint(1, 100000))
 MIME_IMAGES = ["image/png",
                "image/bmp",
                "image/jpeg",

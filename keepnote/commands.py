@@ -27,13 +27,13 @@
 # python libs
 import errno
 import os
-import random
 import socket
 import sys
 import _thread
 
 # keepnote libs
 import keepnote
+import secrets
 
 
 # constants
@@ -109,7 +109,7 @@ def read_lock_file(fd):
 
 def make_passwd():
     """Generate a random password"""
-    return str(random.randint(0, 1000000))
+    return str(secrets.SystemRandom().randint(0, 1000000))
 
 
 #=============================================================================
@@ -127,7 +127,7 @@ def open_socket(port=None, start_port=4000, end_port=10000, tries=10):
     for i in range(tries):
         # choose port
         if port is None:
-            port2 = random.randint(start_port, end_port)
+            port2 = secrets.SystemRandom().randint(start_port, end_port)
         else:
             port2 = port
 

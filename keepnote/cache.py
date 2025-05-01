@@ -27,6 +27,7 @@
 
 # python imports
 from heapq import heappush, heappop
+import secrets
 
 
 NULL = object()
@@ -87,8 +88,6 @@ class LRUCache (DictCache):
 
 #=============================================================================
 if __name__ == "__main__":
-    
-    import random
 
     h = []
     heappush(h, 2)
@@ -115,7 +114,7 @@ if __name__ == "__main__":
     c = LRUCache(lambda x: int(x), 10)
 
     for i in range(100):
-        j = str(random.randint(0, 20))
+        j = str(secrets.SystemRandom().randint(0, 20))
         print(c[j])
 
     print(c._cache_dict)
